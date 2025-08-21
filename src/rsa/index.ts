@@ -151,7 +151,10 @@ export class RsaKeys extends AbstractKeys {
         )
         const encryptedKey = await encryptKeyTo({ key, publicKey })
 
-        const result = joinBufs(encryptedKey, encryptedContent)
+        const result = joinBufs(
+            encryptedKey.buffer as ArrayBuffer,
+            encryptedContent.buffer as ArrayBuffer
+        )
         return new Uint8Array(result)
     }
 
@@ -291,7 +294,7 @@ export async function verify (
 ):Promise<boolean> {
     const _key = didToPublicKey(signingDid)
     const key = await importPublicKey(
-        _key.publicKey.buffer,
+        _key.publicKey.buffer as ArrayBuffer,
         HashAlg.SHA_256,
         KeyUse.Sign
     )
@@ -341,7 +344,10 @@ export async function encryptTo (
     )
     const encryptedKey = await encryptKeyTo({ key, publicKey })
 
-    return joinBufs(encryptedKey, encryptedContent)
+    return joinBufs(
+        encryptedKey.buffer as ArrayBuffer,
+        encryptedContent.buffer as ArrayBuffer
+    )
 }
 
 /**
@@ -368,7 +374,10 @@ encryptTo.asString = async function (
     )
 
     const encryptedKey = await encryptKeyTo({ key, publicKey })
-    const joined = joinBufs(encryptedKey, encryptedContent)
+    const joined = joinBufs(
+        encryptedKey.buffer as ArrayBuffer,
+        encryptedContent
+    )
 
     return toString(new Uint8Array(joined), 'base64pad')
 }
@@ -421,34 +430,34 @@ encryptKeyTo.asString = async function ({ key, publicKey }:{
 }
 
 export async function encrypt (
-    data:Uint8Array,
+    data:Uint8Array<ArrayBuffer>,
     cryptoKey:CryptoKey|Uint8Array,
     format?:undefined,
-    iv?:Uint8Array
+    iv?:Uint8Array<ArrayBuffer>
 ):Promise<Uint8Array>
 
 export async function encrypt (
-    data:Uint8Array,
+    data:Uint8Array<ArrayBuffer>,
     cryptoKey:CryptoKey|Uint8Array,
     format:'uint8array',
-    iv?:Uint8Array
+    iv?:Uint8Array<ArrayBuffer>
 ):Promise<Uint8Array>
 
 export async function encrypt (
-    data:Uint8Array,
+    data:Uint8Array<ArrayBuffer>,
     cryptoKey:CryptoKey|Uint8Array,
     format:'arraybuffer',
-    iv?:Uint8Array
+    iv?:Uint8Array<ArrayBuffer>
 ):Promise<ArrayBuffer>
 
 /**
  * Encrypt the given data
  */
 export async function encrypt (
-    data:Uint8Array,
+    data:Uint8Array<ArrayBuffer>,
     cryptoKey:CryptoKey|Uint8Array,
     format?:'uint8array'|'arraybuffer',
-    iv?:Uint8Array
+    iv?:Uint8Array<ArrayBuffer>
 ):Promise<Uint8Array|ArrayBuffer> {
     // get a crypto key
     const key = (isCryptoKey(cryptoKey) ?
@@ -458,7 +467,10 @@ export async function encrypt (
 
     // prefix the `iv` into the cipher text
     const encrypted = (iv ?
-        await webcrypto.subtle.encrypt({ name: AES_GCM, iv }, key, data) :
+        await webcrypto.subtle.encrypt({
+            name: AES_GCM,
+            iv
+        }, key, data) :
         await encryptBytes(data, key)
     )
 
